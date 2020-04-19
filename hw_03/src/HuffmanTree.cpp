@@ -12,19 +12,22 @@ T get_and_pop_front_in_deque(std::deque<T> &deque){
 
  // return true if 1st node's weight is min out of two
 bool HuffmanTree::compare_two_nodes_by_weight(int index_of_first_node, int index_of_second_node) const{
-    return nodes[index_of_first_node].get_weight() < nodes[index_of_second_node].get_weight();
+    return nodes[index_of_first_node]->get_weight() < nodes[index_of_second_node]->get_weight();
 }
 
 void HuffmanTree::merge_two_nodes(int index_of_first_node, int index_of_second_node){
 
-    HuffmanNode new_node(nodes[index_of_first_node].get_weight() + nodes[index_of_second_node].get_weight(), 
-        &nodes[index_of_first_node], &nodes[index_of_second_node]);
+    HuffmanNode *new_node = new HuffmanNode(nodes[index_of_first_node]->get_weight() + nodes[index_of_second_node]->get_weight(),
+        nodes[index_of_first_node], nodes[index_of_second_node]);
     
     nodes.push_back(new_node);
 }
 
 
-HuffmanTree::HuffmanTree(std::vector<char> &unique_bytes, std::unordered_map<char, int32_t> &frequency_table){
+HuffmanTree::HuffmanTree(std::vector<char> &unique_bytes, std::unordered_map<char, int32_t> &frequency_table)
+    : root()
+    , nodes()
+{
 
   // sort by frequency
     std::sort(unique_bytes.begin(), unique_bytes.end(), 
@@ -32,12 +35,12 @@ HuffmanTree::HuffmanTree(std::vector<char> &unique_bytes, std::unordered_map<cha
 
     // add data to nodes
     for (char byte : unique_bytes){
-        nodes.push_back(HuffmanNode(frequency_table[byte], byte));
+        nodes.push_back(new HuffmanNode(frequency_table[byte], byte));
     }
 
     // Special case
     if (nodes.size() == 1){
-        root = &nodes[nodes.size() - 1];
+        root = nodes[nodes.size() - 1];
         return;
     }
 
@@ -95,5 +98,11 @@ HuffmanTree::HuffmanTree(std::vector<char> &unique_bytes, std::unordered_map<cha
         second_queue.push_back(nodes.size() - 1);
     }
     // pick a root.
-    root = &nodes[nodes.size() - 1];
+    root = nodes[nodes.size() - 1];
+}
+
+HuffmanTree::~HuffmanTree() {
+    for (HuffmanNode *elem : nodes){
+        delete elem;
+    }
 }
