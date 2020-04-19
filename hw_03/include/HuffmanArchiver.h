@@ -13,9 +13,9 @@ public:
 
 private:
     void dfs_to_compress(
-        std::unordered_map<char, std::string> &new_bytes, HuffmanNode &node, std::string &code);
+        std::unordered_map<char, std::string> &new_bytes, HuffmanNode *node, std::string &code);
 
     void dfs_to_extract(
-        std::unordered_map<std::string, char> &new_bytes, HuffmanNode &node, std::string &code);
+        std::unordered_map<std::string, char> &new_bytes, HuffmanNode *node, std::string &code);
 
 };

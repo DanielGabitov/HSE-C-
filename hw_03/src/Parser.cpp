@@ -2,7 +2,6 @@
 #include <cassert>
 #include <algorithm>
 #include "../include/Huffman.h"
-#include <iostream>
 
 
 // Парсит консольные данные.
