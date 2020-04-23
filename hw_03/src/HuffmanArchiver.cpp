@@ -45,8 +45,11 @@ void HuffmanArchiver::dfs_to_extract(
 // returns new bytes table.
 std::unordered_map<char, std::string> HuffmanArchiver::compress(HuffmanTree &tree){
 
-    std::unordered_map<char, std::string> encoded_bytes; 
-    std::string code;
+    std::unordered_map<char, std::string> encoded_bytes;
+
+    // in case there has been only 1 symbol, we need root to have a code.
+    std::string code = (tree.is_one_symbol_case()) ? "0" : std::string();
+
     dfs_to_compress(encoded_bytes, tree.get_root(), code);
     return encoded_bytes;
 }
@@ -54,8 +57,11 @@ std::unordered_map<char, std::string> HuffmanArchiver::compress(HuffmanTree &tre
 // return extracted table.
 std::unordered_map<std::string, char> HuffmanArchiver::extract(HuffmanTree &tree){
 
-    std::unordered_map<std::string, char> extracted_bytes; 
-    std::string code;
+    std::unordered_map<std::string, char> extracted_bytes;
+
+    // in case there has been only 1 symbol, we need root to have a code.
+    std::string code = (tree.is_one_symbol_case()) ? "0" : std::string();
+
     dfs_to_extract(extracted_bytes, tree.get_root(), code);
     return extracted_bytes;
 }

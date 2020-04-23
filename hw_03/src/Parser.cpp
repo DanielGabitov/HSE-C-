@@ -2,58 +2,69 @@
 #include <cassert>
 #include <algorithm>
 #include "../include/Huffman.h"
+#include "../include/ParserExceptions.h"
+
+namespace{
+
+    char read_flag(const char * line){
+        size_t i = 0;
+        while (line[i] == '-'){
+            i++;
+        }
+        return line[i];
+    } 
+
+} // anonymous namespace ends.
 
 
 // Парсит консольные данные.
 Parser::Parser(int argc, char **argv) {
 
-    assert(argc > 5);
+    if (argc < 5){
+        throw ParserExceptions("Not enough arguments.");
+    }
 
-    action  = *(*(argv + 1) + 1);
-    first_file_flag = *(*(argv + 2) + 1);
-    first_file_name = *(argv + 3);
-    second_file_flag = *(*(argv + 4) + 1);
-    second_file_name = *(argv + 5);
+    char terminal_action  = read_flag( *(argv + 1) );
+    first_file_flag = read_flag ( *(argv + 2) );
+    input_file_name = *(argv + 3);
+    second_file_flag = read_flag ( *( argv + 4) );
+    output_file_name = *(argv + 5);
 
-//    action  = 'c';
-//    first_file_flag = 'f';
-//    first_file_name = "test.txt";
-//    second_file_flag = 'o';
-//    second_file_name = "test_out.bin" ;
+    switch (terminal_action){
+
+        case 'c':
+            action = "save";
+            break;
+
+        case 'u':
+            action = "load";
+            break;
+
+        default:
+            throw ParserExceptions("Not known command.");
+            break;
+    }
 
 
     if (first_file_flag != 'f'){
         std::swap(first_file_flag, second_file_flag);
-        std::swap(first_file_name, second_file_name);
+        std::swap(input_file_name, output_file_name);
     }
 
-    // assert(first_file_flag == 'f');
-    // assert(second_file_flag == 'o');
-    // assert(action == 'c' or action == 'u');
+    if (first_file_flag != 'f' or second_file_flag != 'o'){
+        throw ParserExceptions("Not known flags.");
+    }
+
 }
 
-void Parser::do_command() {
+char* Parser::get_input_file_name() const{
+    return input_file_name;
+}
 
-    std::ofstream output_stream;
-    std::ifstream input_stream;
-    output_stream.open(second_file_name, std::ios::binary);
-    input_stream.open(first_file_name, std::ios::binary);
+char* Parser::get_output_file_name() const{
+    return output_file_name;
+}
 
-    assert(output_stream.is_open());
-    assert(input_stream.is_open());
-
-    Huffman huffman;
-
-    switch (action){
-
-        case 'c':
-            huffman.save(input_stream, output_stream);
-            break;
-
-        case 'u':
-            huffman.load(input_stream, output_stream);
-
-        default:
-            break;
-    }
+std::string Parser::get_action() const {
+    return action;
 }

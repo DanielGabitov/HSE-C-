@@ -2,15 +2,17 @@
 #include "algorithm"
 #include <deque>
 
+namespace{
+
 template <typename T>
 T get_and_pop_front_in_deque(std::deque<T> &deque){
     T front_value = deque.front();
     deque.pop_front();
     return front_value;
 }
+} // anonymous namespace ends.
 
-
- // return true if 1st node's weight is min out of two
+// return true if 1st node's weight is min out of two
 bool HuffmanTree::compare_two_nodes_by_weight(int index_of_first_node, int index_of_second_node) const{
     return nodes[index_of_first_node]->get_weight() < nodes[index_of_second_node]->get_weight();
 }
@@ -24,23 +26,23 @@ void HuffmanTree::merge_two_nodes(int index_of_first_node, int index_of_second_n
 }
 
 
-HuffmanTree::HuffmanTree(std::vector<char> &unique_bytes, std::unordered_map<char, int32_t> &frequency_table)
+HuffmanTree::HuffmanTree(std::vector<char> &unique_bytes, const std::unordered_map<char, int32_t> &frequency_table)
     : root()
-    , nodes()
-{
+    , nodes(){
 
   // sort by frequency
     std::sort(unique_bytes.begin(), unique_bytes.end(), 
-        [&frequency_table](const char &a, const char &b){return (frequency_table[a] < frequency_table[b]);});
+        [&frequency_table](const char &a, const char &b){return (frequency_table.find(a)->second < frequency_table.find(b)->second);});
 
     // add data to nodes
     for (char byte : unique_bytes){
-        nodes.push_back(new HuffmanNode(frequency_table[byte], byte));
+        nodes.push_back(new HuffmanNode(frequency_table.find(byte)->second, byte));
     }
 
     // Special case
     if (nodes.size() == 1){
         root = nodes[nodes.size() - 1];
+        one_symbol_case = true;
         return;
     }
 

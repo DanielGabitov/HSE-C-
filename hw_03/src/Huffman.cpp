@@ -4,11 +4,17 @@
 const int BYTE_SIZE = 8;
 
 
-void Huffman::save(std::ifstream &input_stream, std::ofstream &output_stream){
+void Huffman::save(std::istream &input_stream, std::ostream &output_stream){
 
     std::unordered_map<char, int32_t> frequency_table;
     std::vector<char> unique_bytes;
     int32_t number_of_bytes_to_compress = read_and_make_ftable(unique_bytes, frequency_table, input_stream);
+
+    if (number_of_bytes_to_compress == 0){
+        std::cout << 0 << '\n' << 0 << '\n' << 0 << '\n';
+        return;
+    }
+
     int32_t frequency_table_size = write_ftable(frequency_table, output_stream, unique_bytes);
 
     HuffmanTree tree(unique_bytes, frequency_table);
@@ -22,12 +28,14 @@ void Huffman::save(std::ifstream &input_stream, std::ofstream &output_stream){
     std::cout << number_of_bytes_to_compress << '\n'
               << written_bytes_amount        << '\n'
               << frequency_table_size + 1    << '\n';
-    
+
+    input_stream.seekg(std::ios_base::beg);
+
     return; 
 }
 
 // Reads data and stores useful staff in given data structures.Return number of bytes.
-int32_t Huffman::read_and_make_ftable(std::vector<char> &unique_bytes, std::unordered_map<char, int32_t> &frequency_table, std::ifstream &input_stream){
+int32_t Huffman::read_and_make_ftable(std::vector<char> &unique_bytes, std::unordered_map<char, int32_t> &frequency_table, std::istream &input_stream){
     char byte;
     int32_t number_of_bytes = 0;
     while (input_stream.read(&byte, sizeof(char))){
@@ -46,19 +54,18 @@ int32_t Huffman::read_and_make_ftable(std::vector<char> &unique_bytes, std::unor
 }
 
 template<typename T>
-void Huffman::write_binary(const T &item, std::ofstream &output_stream){
+void Huffman::write_binary(const T &item, std::ostream &output_stream){
     output_stream.write(reinterpret_cast<const char *>(&item), sizeof(item));
 }
 
 template<typename T>
-void Huffman::read_binary(T &item, std::ifstream &input_stream){
+void Huffman::read_binary(T &item, std::istream &input_stream){
     input_stream.read(reinterpret_cast<char *>(&item), sizeof(item));
 }
 
-
 // Writes ftable to decode it if needed
-int32_t Huffman::write_ftable(std::unordered_map<char, int32_t> &frequency_table, std::ofstream &output_stream,
-            std::vector<char> &unique_bytes){
+int32_t Huffman::write_ftable(const std::unordered_map<char, int32_t> &frequency_table, std::ostream &output_stream,
+            const std::vector<char> &unique_bytes){
 
     int32_t additional_data = 0;
 
@@ -67,22 +74,22 @@ int32_t Huffman::write_ftable(std::unordered_map<char, int32_t> &frequency_table
 
     for (size_t i = 0; i < unique_bytes.size(); i++){
         write_binary(unique_bytes[i], output_stream);
-        write_binary(frequency_table[unique_bytes[i]], output_stream);
+        write_binary(frequency_table.find(unique_bytes[i])->second, output_stream);
 
         additional_data += (sizeof(char) + sizeof(int32_t));
     }
     return additional_data;
 }
 
-int32_t Huffman::write_compressed_data(std::ifstream &input_stream,
-            std::ofstream &output_stream, std::unordered_map<char, std::string> &new_bytes_table){
+int32_t Huffman::write_compressed_data(std::istream &input_stream,
+            std::ostream &output_stream, const std::unordered_map<char, std::string> &new_bytes_table){
 
     char byte;
     int position = 0;
     char to_write = 0;
     int32_t bytes_amount = 0;
     while (input_stream.read(&byte, sizeof(char))){
-        std::string new_byte = new_bytes_table[byte];
+        std::string new_byte = new_bytes_table.find(byte)->second;
         for (char symb : new_byte){
             to_write |= (int)(symb == '1') << position++;
             if (position == BYTE_SIZE){
@@ -98,16 +105,25 @@ int32_t Huffman::write_compressed_data(std::ifstream &input_stream,
         write_binary(to_write, output_stream);
         bytes_amount++;
     }
+
+    input_stream.seekg(std::ios::beg);
+    input_stream.clear();
+
     return bytes_amount;
 }
 
 int32_t Huffman::read_ftable(std::vector<char> &unique_bytes, 
-        std::unordered_map<char, int32_t> &frequency_table, std::ifstream &input_stream){
+        std::unordered_map<char, int32_t> &frequency_table, std::istream &input_stream){
 
     int32_t amount_of_data = 0;
     int32_t table_size, frequency;
     char byte;
     input_stream.read((char *)&table_size, sizeof(int32_t));
+
+    if (input_stream.eof()){
+        return 0;
+    }
+
     amount_of_data += sizeof(int32_t);
     for (int32_t i = 0; i < table_size; i++){
         input_stream.read((char *)&byte, sizeof(char));
@@ -122,7 +138,7 @@ int32_t Huffman::read_ftable(std::vector<char> &unique_bytes,
 }
 
 int32_t Huffman::write_extracted_data(std::unordered_map<std::string, char> &bytes_table, int32_t bytes_amount,
-                std::ifstream &input_stream, std::ofstream &output_stream){
+                std::istream &input_stream, std::ostream &output_stream){
 
     char byte;
     input_stream.read(&byte, sizeof(char));
@@ -136,7 +152,7 @@ int32_t Huffman::write_extracted_data(std::unordered_map<std::string, char> &byt
             position = 0;
             bytes_were_read++;
         }
-        code.push_back((byte >> position++ & 1) + '0') ;
+        code.push_back(((byte >> position++) & 1) + '0') ;
         if (bytes_table.find(code) == bytes_table.end()){
             continue;
         }
@@ -146,15 +162,24 @@ int32_t Huffman::write_extracted_data(std::unordered_map<std::string, char> &byt
             break;
         }
     }
+
+    input_stream.seekg(std::ios::beg);
+    input_stream.clear();
+
     return bytes_were_read;
 }
 
 
-void Huffman::load(std::ifstream &input_stream, std::ofstream &output_stream){
+void Huffman::load(std::istream &input_stream, std::ostream &output_stream){
 
     std::unordered_map<char, int32_t> frequency_table;
     std::vector<char> unique_bytes;
     int32_t fr_table_size = read_ftable(unique_bytes, frequency_table, input_stream);
+
+    if (fr_table_size == 0){
+        std::cout << 0 << '\n' << 0 << '\n' << 0 << '\n';
+        return;
+    }
 
     int32_t bytes_amount;
     read_binary(bytes_amount, input_stream);
@@ -168,5 +193,8 @@ void Huffman::load(std::ifstream &input_stream, std::ofstream &output_stream){
     std::cout << bytes_read         << '\n'
               << bytes_amount       << '\n'
               << fr_table_size + 1  << '\n';
+
+    input_stream.seekg(std::ios_base::beg);
+
     return;
 }

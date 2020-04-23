@@ -1,14 +1,18 @@
 #pragma once
 
+#include <string>
+
 class Parser {
 public:
     Parser(int argc, char **argv);
-    void do_command();
+    std::string get_action() const;
+    char* get_input_file_name() const;
+    char* get_output_file_name() const;
 private:
-    char action;
+    std::string action;
     char first_file_flag;
-    char *first_file_name;
+    char *input_file_name;
     char second_file_flag;
-    char *second_file_name;
+    char *output_file_name;
 };
 
