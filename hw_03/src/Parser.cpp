@@ -1,21 +1,9 @@
 #include "../include/Parser.h"
 #include <cassert>
 #include <algorithm>
+#include <cstring>
 #include "../include/Huffman.h"
 #include "../include/ParserExceptions.h"
-
-namespace{
-
-    char read_flag(const char * line){
-        size_t i = 0;
-        while (line[i] == '-'){
-            i++;
-        }
-        return line[i];
-    } 
-
-} // anonymous namespace ends.
-
 
 // Парсит консольные данные.
 Parser::Parser(int argc, char **argv) {
@@ -24,35 +12,36 @@ Parser::Parser(int argc, char **argv) {
         throw ParserExceptions("Not enough arguments.");
     }
 
-    char terminal_action  = read_flag( *(argv + 1) );
-    first_file_flag = read_flag ( *(argv + 2) );
-    input_file_name = *(argv + 3);
-    second_file_flag = read_flag ( *( argv + 4) );
-    output_file_name = *(argv + 5);
+    for (int i = 1; i < 6; i++){
+        std::string command = argv[i];
 
-    switch (terminal_action){
-
-        case 'c':
+        if (command == "-f" or command == "--file"){
+            first_file_flag = argv[i++];
+            input_file_name = argv[i];
+        } else if (command == "-o" or command == "--output"){
+            second_file_flag = argv[i++];
+            output_file_name = argv[i];
+        } else if (command == "-c"){
             action = "save";
-            break;
-
-        case 'u':
+        } else if (command == "-u"){
             action = "load";
-            break;
+        } else {
+            throw ParserExceptions("Params are not correct.");
+        }
 
-        default:
-            throw ParserExceptions("Not known command.");
-            break;
+
     }
 
-
-    if (first_file_flag != 'f'){
-        std::swap(first_file_flag, second_file_flag);
-        std::swap(input_file_name, output_file_name);
+    if (action != "load" and action != "save"){
+        throw ParserExceptions("Not correct param.");
     }
 
-    if (first_file_flag != 'f' or second_file_flag != 'o'){
-        throw ParserExceptions("Not known flags.");
+    if (strcmp(first_file_flag, "-f") != 0 and strcmp(first_file_flag, "--file") != 0){
+        throw ParserExceptions("Params are not correct.");
+    }
+
+    if (strcmp(second_file_flag,"-o") != 0 and strcmp(second_file_flag, "--output") != 0){
+        throw ParserExceptions("Params are not correct.");
     }
 
 }

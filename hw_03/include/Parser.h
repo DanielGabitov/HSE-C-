@@ -10,9 +10,9 @@ public:
     char* get_output_file_name() const;
 private:
     std::string action;
-    char first_file_flag;
+    char *first_file_flag;
     char *input_file_name;
-    char second_file_flag;
+    char *second_file_flag;
     char *output_file_name;
 };
 

@@ -4,6 +4,21 @@
 const int BYTE_SIZE = 8;
 
 
+namespace {
+
+template<typename T>
+void write_binary(const T &item, std::ostream &output_stream){
+    output_stream.write(reinterpret_cast<const char *>(&item), sizeof(item));
+}
+
+template<typename T>
+void read_binary(T &item, std::istream &input_stream){
+    input_stream.read(reinterpret_cast<char *>(&item), sizeof(item));
+}
+
+} // Anonymous namespace ends.
+
+
 void Huffman::save(std::istream &input_stream, std::ostream &output_stream){
 
     std::unordered_map<char, int32_t> frequency_table;
@@ -24,10 +39,10 @@ void Huffman::save(std::istream &input_stream, std::ostream &output_stream){
     write_binary(number_of_bytes_to_compress, output_stream);
     int32_t written_bytes_amount = write_compressed_data(input_stream, output_stream, new_table);
 
-    // print parameters. + 1 coz of writing amount of bytes to compress.
+    // print parameters. + 4 coz of writing amount of bytes to compress.
     std::cout << number_of_bytes_to_compress << '\n'
               << written_bytes_amount        << '\n'
-              << frequency_table_size + 1    << '\n';
+              << frequency_table_size + 4    << '\n';
 
     input_stream.seekg(std::ios_base::beg);
 
@@ -51,16 +66,6 @@ int32_t Huffman::read_and_make_ftable(std::vector<char> &unique_bytes, std::unor
     input_stream.clear();
     input_stream.seekg(std::ios_base::beg);
     return number_of_bytes;
-}
-
-template<typename T>
-void Huffman::write_binary(const T &item, std::ostream &output_stream){
-    output_stream.write(reinterpret_cast<const char *>(&item), sizeof(item));
-}
-
-template<typename T>
-void Huffman::read_binary(T &item, std::istream &input_stream){
-    input_stream.read(reinterpret_cast<char *>(&item), sizeof(item));
 }
 
 // Writes ftable to decode it if needed
@@ -192,7 +197,7 @@ void Huffman::load(std::istream &input_stream, std::ostream &output_stream){
     // print parameters. + 1 coz of writing amount of bytes to compress.
     std::cout << bytes_read         << '\n'
               << bytes_amount       << '\n'
-              << fr_table_size + 1  << '\n';
+              << fr_table_size + 4  << '\n';
 
     input_stream.seekg(std::ios_base::beg);
 
